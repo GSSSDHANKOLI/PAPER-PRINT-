@@ -252,3 +252,82 @@
     </script>
 </body>
 </html>
+<!-- यहाँ से वर्टिकल लेआउट का कोड शुरू -->
+<style>
+    /* 2 पेपर वर्टिकल (Left-Right) लेआउट के लिए नई CSS क्लास */
+    .layout-2-vertical { 
+        grid-template-columns: 1fr 1fr; 
+        grid-template-rows: 1fr; 
+        gap: 15mm; 
+    }
+</style>
+
+<script>
+    // 1. ड्रॉपडाउन में नया '2 पेपर (Vertical)' ऑप्शन जोड़ें
+    const layoutDropdown = document.getElementById('layoutSelect');
+    const verticalOption = document.createElement('option');
+    verticalOption.value = '2-vertical';
+    verticalOption.innerHTML = '2 पेपर (Vertical - अगल-बगल)';
+    // इसे दूसरे नंबर पर डालें (Horizontal के ठीक बाद)
+    layoutDropdown.insertBefore(verticalOption, layoutDropdown.options[1]);
+
+    // 2. पुराने generatePaper फंक्शन को नए वाले से अपडेट करें ताकि वह वर्टिकल कमांड को समझ सके
+    function generatePaper() {
+        const school = document.getElementById('schoolName').value;
+        const subHeader = document.getElementById('subHeader').value;
+        const watermark = document.getElementById('watermarkText').value;
+        const questionsRaw = document.getElementById('questionsText').value;
+        
+        // नया बदलाव: स्ट्रिंग और नंबर को अलग-अलग समझना ('2-vertical' के लिए)
+        const layoutVal = document.getElementById('layoutSelect').value; 
+        const boxCount = parseInt(layoutVal); 
+        
+        const columnStyle = document.getElementById('columnStyle').value;
+        const fontSize = document.getElementById('fontSize').value;
+        const lineSpacing = document.getElementById('lineSpacing').value;
+
+        const questionsArray = questionsRaw.split('\n');
+        let questionsHTML = '';
+        questionsArray.forEach(q => {
+            if(q.trim() !== "") {
+                questionsHTML += `<div class="question-line">${q}</div>`;
+            }
+        });
+
+        let columnCSS = '';
+        if (columnStyle === '1') {
+            columnCSS = 'column-count: 1;';
+        } else if (columnStyle === '2-auto') {
+            columnCSS = 'column-count: 2; column-gap: 15px; column-fill: auto;';
+        } else if (columnStyle === '2-balance') {
+            columnCSS = 'column-count: 2; column-gap: 15px; column-fill: balance;';
+        }
+
+        const singlePaperHTML = `
+            <div class="watermark">${watermark}</div>
+            <div class="school-name">${school}</div>
+            <div class="sub-header">${subHeader}</div>
+            <div class="questions-container" style="position: relative; z-index: 1; ${columnCSS} font-size: ${fontSize}; line-height: ${lineSpacing};">
+                ${questionsHTML}
+            </div>
+        `;
+
+        const page = document.getElementById('a4Page');
+        // क्लास में वैल्यू डालें (layout-2 या layout-2-vertical)
+        page.className = 'a4-page layout-' + layoutVal; 
+        page.innerHTML = '';
+
+        // बॉक्स जेनरेट करें
+        for (let i = 0; i < boxCount; i++) {
+            const box = document.createElement('div');
+            box.className = 'paper-box';
+            box.innerHTML = singlePaperHTML;
+            page.appendChild(box);
+        }
+    }
+
+    // नया कोड पेस्ट होते ही एक बार फंक्शन रन कर दें
+    generatePaper();
+</script>
+<!-- यहाँ वर्टिकल लेआउट का कोड खत्म -->
+
