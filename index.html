@@ -252,55 +252,102 @@
     </script>
 </body>
 </html>
-<!-- यहाँ से वर्टिकल लेआउट का कोड शुरू -->
+<!-- यहाँ से वर्टिकल और Bilingual (हिंदी-English) दोनों का कोड शुरू -->
 <style>
-    /* 2 पेपर वर्टिकल (Left-Right) लेआउट के लिए नई CSS क्लास */
+    /* 2 पेपर वर्टिकल (Left-Right) लेआउट */
     .layout-2-vertical { 
         grid-template-columns: 1fr 1fr; 
         grid-template-rows: 1fr; 
         gap: 15mm; 
     }
+
+    /* Bilingual लेआउट के लिए ग्रिड सिस्टम */
+    .layout-1-bilingual { 
+        grid-template-columns: 1fr; 
+        grid-template-rows: 1fr; 
+    }
+    .bilingual-grid { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        column-gap: 20px; 
+        width: 100%; 
+    }
+    .bilingual-row { 
+        display: contents; 
+    }
+    .bilingual-left { 
+        padding-right: 10px; 
+        border-right: 1px dashed #ccc; 
+        break-inside: avoid; 
+    }
+    .bilingual-right { 
+        padding-left: 10px; 
+        break-inside: avoid; 
+    }
 </style>
 
 <script>
-    // 1. ड्रॉपडाउन में नया '2 पेपर (Vertical)' ऑप्शन जोड़ें
     const layoutDropdown = document.getElementById('layoutSelect');
+
+    // 1. '2 पेपर (Vertical)' ऑप्शन जोड़ें
     const verticalOption = document.createElement('option');
     verticalOption.value = '2-vertical';
     verticalOption.innerHTML = '2 पेपर (Vertical - अगल-बगल)';
-    // इसे दूसरे नंबर पर डालें (Horizontal के ठीक बाद)
     layoutDropdown.insertBefore(verticalOption, layoutDropdown.options[1]);
 
-    // 2. पुराने generatePaper फंक्शन को नए वाले से अपडेट करें ताकि वह वर्टिकल कमांड को समझ सके
+    // 2. '1 पेपर (Bilingual)' ऑप्शन जोड़ें
+    const bilingualOption = document.createElement('option');
+    bilingualOption.value = '1-bilingual';
+    bilingualOption.innerHTML = '1 पेपर (Bilingual: हिंदी | English)';
+    layoutDropdown.appendChild(bilingualOption);
+
+    // 3. अपडेटेड मेन फंक्शन (जो वर्टिकल और Bilingual दोनों को संभालेगा)
     function generatePaper() {
         const school = document.getElementById('schoolName').value;
         const subHeader = document.getElementById('subHeader').value;
         const watermark = document.getElementById('watermarkText').value;
         const questionsRaw = document.getElementById('questionsText').value;
         
-        // नया बदलाव: स्ट्रिंग और नंबर को अलग-अलग समझना ('2-vertical' के लिए)
         const layoutVal = document.getElementById('layoutSelect').value; 
-        const boxCount = parseInt(layoutVal); 
-        
+        const boxCount = parseInt(layoutVal) || 1;
         const columnStyle = document.getElementById('columnStyle').value;
         const fontSize = document.getElementById('fontSize').value;
         const lineSpacing = document.getElementById('lineSpacing').value;
 
-        const questionsArray = questionsRaw.split('\n');
         let questionsHTML = '';
-        questionsArray.forEach(q => {
-            if(q.trim() !== "") {
-                questionsHTML += `<div class="question-line">${q}</div>`;
-            }
-        });
+
+        // अगर Bilingual चुना गया है
+        if (layoutVal === '1-bilingual') {
+            questionsHTML = '<div class="bilingual-grid">';
+            const questionsArray = questionsRaw.split('\n');
+            questionsArray.forEach(q => {
+                if(q.trim() !== "") {
+                    const parts = q.split('|');
+                    const leftText = parts[0] ? parts[0].trim() : '';
+                    const rightText = parts[1] ? parts[1].trim() : '';
+                    
+                    questionsHTML += `
+                        <div class="bilingual-row">
+                            <div class="question-line bilingual-left">${leftText}</div>
+                            <div class="question-line bilingual-right">${rightText}</div>
+                        </div>`;
+                }
+            });
+            questionsHTML += '</div>';
+        } else {
+            const questionsArray = questionsRaw.split('\n');
+            questionsArray.forEach(q => {
+                if(q.trim() !== "") {
+                    questionsHTML += `<div class="question-line">${q}</div>`;
+                }
+            });
+        }
 
         let columnCSS = '';
-        if (columnStyle === '1') {
-            columnCSS = 'column-count: 1;';
-        } else if (columnStyle === '2-auto') {
-            columnCSS = 'column-count: 2; column-gap: 15px; column-fill: auto;';
-        } else if (columnStyle === '2-balance') {
-            columnCSS = 'column-count: 2; column-gap: 15px; column-fill: balance;';
+        if (layoutVal !== '1-bilingual') {
+            if (columnStyle === '1') columnCSS = 'column-count: 1;';
+            else if (columnStyle === '2-auto') columnCSS = 'column-count: 2; column-gap: 15px; column-fill: auto;';
+            else if (columnStyle === '2-balance') columnCSS = 'column-count: 2; column-gap: 15px; column-fill: balance;';
         }
 
         const singlePaperHTML = `
@@ -313,12 +360,10 @@
         `;
 
         const page = document.getElementById('a4Page');
-        // क्लास में वैल्यू डालें (layout-2 या layout-2-vertical)
         page.className = 'a4-page layout-' + layoutVal; 
         page.innerHTML = '';
 
-        // बॉक्स जेनरेट करें
-        for (let i = 0; i < boxCount; i++) {
+        for (let i = 0; i < (layoutVal === '1-bilingual' ? 1 : boxCount); i++) {
             const box = document.createElement('div');
             box.className = 'paper-box';
             box.innerHTML = singlePaperHTML;
@@ -326,8 +371,6 @@
         }
     }
 
-    // नया कोड पेस्ट होते ही एक बार फंक्शन रन कर दें
     generatePaper();
 </script>
-<!-- यहाँ वर्टिकल लेआउट का कोड खत्म -->
-
+<!-- यहाँ वर्टिकल और Bilingual दोनों का कोड खत्म -->
