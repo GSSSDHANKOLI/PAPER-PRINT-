@@ -3,248 +3,471 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>प्रोफेशनल स्कूल पेपर जनरेटर</title>
+    <title>All-in-One Professional Paper Generator</title>
     <style>
+        :root {
+            --primary: #0056b3;
+            --secondary: #f4f6f9;
+            --text-dark: #333;
+            --border-color: #ccc;
+        }
+
         body { 
-            font-family: Arial, sans-serif; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             margin: 0; 
-            padding: 10px; 
-            background-color: #f4f6f9; 
-        }
-        .container {
+            background-color: var(--secondary); 
             display: flex;
-            flex-direction: column;
-            gap: 15px;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        /* सेटिंग्स पैनल */
-        .controls { 
-            background: #fff; 
-            padding: 15px; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        /* लेआउट: लेफ्ट में सेटिंग्स, राइट में प्रीव्यू */
+        .sidebar {
+            width: 400px;
+            background: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            padding: 20px;
+            z-index: 10;
         }
-        .controls h2 { margin: 0 0 15px 0; font-size: 18px; border-bottom: 2px solid #333; padding-bottom: 5px; }
         
-        .input-group { margin-bottom: 10px; }
-        .input-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #333; }
+        .preview-area {
+            flex-grow: 1;
+            overflow: auto;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-color: #525659;
+        }
+
+        /* सेटिंग्स पैनल डिज़ाइन */
+        .sidebar h2 { margin-top: 0; color: var(--primary); font-size: 20px; text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+        .section-title { background: var(--secondary); padding: 8px; margin: 15px 0 10px; font-weight: bold; border-left: 4px solid var(--primary); border-radius: 4px; font-size: 14px; }
+        
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: var(--text-dark); }
         .input-group input, .input-group select, .input-group textarea { 
-            width: 100%; 
-            padding: 8px; 
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
-            font-size: 14px; 
-            box-sizing: border-box;
+            width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px; box-sizing: border-box; transition: 0.3s;
         }
-        .input-group textarea { height: 120px; resize: vertical; white-space: pre-wrap; }
+        .input-group input:focus, .input-group textarea:focus { border-color: var(--primary); outline: none; }
+        .input-group textarea { height: 100px; resize: vertical; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        .checkbox-group { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
+        .checkbox-group input { margin-top: 3px; cursor: pointer; }
+        .checkbox-group span { color: #d9534f; font-size: 11px; display: block; font-weight: normal; margin-top: 2px;}
 
-        /* ग्रिड सेटिंग्स फॉर्म के लिए */
-        .settings-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .btn-row { display: flex; gap: 10px; margin-top: 15px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; color: white; }
-        .btn-update { background: #007bff; }
+        /* बटन्स */
+        .btn-row { display: flex; gap: 10px; margin-top: 20px; position: sticky; bottom: 0; background: white; padding-top: 10px; border-top: 1px solid #eee; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; transition: 0.3s; }
+        .btn-update { background: var(--primary); }
+        .btn-update:hover { background: #004494; }
         .btn-print { background: #28a745; }
+        .btn-print:hover { background: #218838; }
 
-        /* प्रीव्यू एरिया */
-        .preview-wrapper { overflow-x: auto; background: #e0e0e0; padding: 15px 5px; text-align: center; }
-        .a4-page {
+        /* A4 पेज का डिज़ाइन */
+        .a4-wrapper {
+            background: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
             width: 210mm;
             height: 297mm;
-            background: white;
             box-sizing: border-box;
-            margin: 0 auto;
-            display: grid;
-            transform-origin: top center;
-            transform: scale(0.45);
-            margin-bottom: -160mm;
+            zoom: 0.7; 
         }
 
-        /* पेज लेआउट */
-        .layout-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; gap: 15mm; }
-        .layout-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10mm; }
-        .layout-6 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 8mm; }
-        .layout-8 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr 1fr; gap: 5mm; }
+        /* 100% Strict Grid Boundary (टेक्स्ट बाहर न जाने के लिए) */
+        .a4-page {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            box-sizing: border-box;
+        }
 
-        /* पेपर बॉक्स */
+        /* डायनामिक लेआउट्स */
+        .layout-1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+        .layout-2-horiz { grid-template-columns: 1fr; grid-template-rows: repeat(2, minmax(0, 1fr)); }
+        .layout-2-vert { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: 1fr; }
+        .layout-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); }
+        .layout-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); }
+        .layout-8 { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); }
+
+        /* सिंगल पेपर बॉक्स */
         .paper-box {
-            border: 1px solid #000;
-            padding: 8mm;
+            padding: 6mm;
             box-sizing: border-box;
             position: relative;
-            overflow: hidden;
-            background: white;
+            overflow: hidden; /* 🔥 100% Stop Bleeding */
             display: flex;
             flex-direction: column;
-        }
-
-        .school-name { text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 2px; color: #000; }
-        .sub-header { text-align: center; font-size: 12px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 4px; margin-bottom: 8px; }
-
-        /* प्रश्नों का कंटेनर (JS से कंट्रोल होगा) */
-        .questions-container {
-            flex-grow: 1;
+            background: white;
             height: 100%;
-            text-align: justify;
+            max-height: 100%;
         }
-        
+        .box-bordered { border: 1px solid #000; }
+
+        /* हेडर डिज़ाइन */
+        .header-section { display: flex; align-items: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 5px; }
+        .school-logo { width: 50px; height: 50px; object-fit: contain; margin-right: 10px; display: none; }
+        .school-info { flex-grow: 1; text-align: center; }
+        .school-name { font-weight: 900; font-size: 16px; margin: 0; text-transform: uppercase; }
+        .school-tagline { font-size: 11px; margin: 2px 0 0 0; font-weight: bold;}
+
+        /* डिटेल्स (क्लास, सब्जेक्ट आदि) */
+        .meta-details { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #000; padding-bottom: 3px; }
+        .instructions { font-size: 11px; font-style: italic; text-align: center; margin-bottom: 5px; font-weight: bold; }
+
+        /* प्रश्न सेक्शन (Strict Bounds) */
+        .questions-container { 
+            flex-grow: 1; 
+            text-align: justify; 
+            z-index: 1; 
+            position: relative; 
+            overflow: hidden; /* 🔥 No Overflow allowed */
+            min-height: 0; /* Allows Auto-Fit Shrinking */
+        }
         .question-line { margin-bottom: 4px; break-inside: avoid; }
+
+        /* Bilingual (हिंदी-English) मॉडर्न लेआउट */
+        .bilingual-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; border-bottom: 1px dashed #eee; padding-bottom: 2px;}
+        .bilingual-row:last-child { border-bottom: none; }
+        .bilingual-col { break-inside: avoid; }
+        .bilingual-col:first-child { border-right: 1px dashed var(--border-color); padding-right: 8px; }
 
         /* वाटरमार्क */
         .watermark {
             position: absolute;
             top: 50%; left: 50%;
-            transform: translate(-50%, -50%) rotate(-30deg);
-            font-size: 45px; color: rgba(0, 0, 0, 0.06);
-            font-weight: bold; pointer-events: none; white-space: nowrap; z-index: 0;
+            transform: translate(-50%, -50%) rotate(-35deg);
+            font-weight: bold;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 0;
         }
 
-        /* प्रिंट कमांड्स */
+        /* प्रिंट सेटिंग्स */
         @media print {
-            @page { size: A4; margin: 0; }
-            body { margin: 0; padding: 0; background: none; }
-            .controls { display: none !important; }
-            .preview-wrapper { padding: 0; background: none; overflow: visible; }
-            .a4-page { transform: scale(1); margin: 0; border: none; page-break-after: always; }
+            @page { size: A4 portrait; margin: 0; }
+            body { margin: 0; background: white; display: block; overflow: visible; height: auto; }
+            .sidebar { display: none !important; }
+            .preview-area { padding: 0; background: none; display: block; overflow: visible; }
+            .a4-wrapper { box-shadow: none; zoom: 1 !important; page-break-after: always; }
+        }
+
+        /* मोबाइल रेस्पॉन्सिव */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow: auto; }
+            .sidebar { width: 100%; box-sizing: border-box; padding: 15px; }
+            .preview-area { zoom: 0.5; overflow: visible; }
+            .btn-row { position: relative; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- सेटिंग्स फॉर्म -->
-        <div class="controls">
-            <h2>प्रोफेशनल पेपर सेटिंग्स</h2>
-            
+    <div class="sidebar">
+        <h2>पेपर जनरेटर प्रो</h2>
+        
+        <div class="section-title">1. स्कूल की जानकारी</div>
+        <div class="input-group">
+            <label>स्कूल का नाम:</label>
+            <input type="text" id="schoolName" value="GURUKUL SCHOOL DHANKOLI">
+        </div>
+        <div class="input-group">
+            <label>टैगलाइन / पता (Optional):</label>
+            <input type="text" id="schoolTagline" value="Class Test">
+        </div>
+        <div class="input-group">
+            <label>लोगो अपलोड करें (Optional):</label>
+            <input type="file" id="logoUpload" accept="image/*">
+        </div>
+
+        <div class="section-title">2. पेपर की डिटेल्स</div>
+        <div class="grid-2">
             <div class="input-group">
-                <label>स्कूल का नाम:</label>
-                <input type="text" id="schoolName" value="GURUKUL SCHOOL DHANKOLI">
+                <label>कक्षा (Class):</label>
+                <input type="text" id="className" value="10th">
             </div>
-            
             <div class="input-group">
-                <label>क्लास, विषय और अंक:</label>
-                <input type="text" id="subHeader" value="कक्षा:  | विषय:  | पूर्णांक: ">
+                <label>विषय (Subject):</label>
+                <input type="text" id="subjectName" value="">
             </div>
-
             <div class="input-group">
-                <label>प्रश्न (हर लाइन में एक प्रश्न):</label>
-                <textarea id="questionsText">1. </textarea>
+                <label>समय (Time):</label>
+                <input type="text" id="time" value=" Hrs">
             </div>
-
-            <div class="settings-grid">
-                <div class="input-group">
-                    <label>पेपर लेआउट:</label>
-                    <select id="layoutSelect">
-                        <option value="2">2 पेपर (A4 पर)</option>
-                        <option value="4" selected>4 पेपर (A4 पर)</option>
-                        <option value="6">6 पेपर (A4 पर)</option>
-                        <option value="8">8 पेपर (A4 पर)</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>प्रश्नों का स्टाइल:</label>
-                    <select id="columnStyle">
-                        <option value="1">पूरे पेज पर सीधा (1 Column)</option>
-                        <option value="2-auto" selected>2 कॉलम (पहले एक साइड भरें)</option>
-                        <option value="2-balance">2 कॉलम (दोनों साइड बराबर)</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>फॉन्ट साइज़:</label>
-                    <select id="fontSize">
-                        <option value="9px">छोटा (9px)</option>
-                        <option value="10px" selected>नॉर्मल (10px)</option>
-                        <option value="11px">बड़ा (11px)</option>
-                        <option value="12px">बहुत बड़ा (12px)</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>लाइन स्पेसिंग:</label>
-                    <select id="lineSpacing">
-                        <option value="1.2">कम (1.2)</option>
-                        <option value="1.4" selected>नॉर्मल (1.4)</option>
-                        <option value="1.6">ज्यादा (1.6)</option>
-                    </select>
-                </div>
-            </div>
-
             <div class="input-group">
-                <label>वाटरमार्क (ऑप्शनल):</label>
-                <input type="text" id="watermarkText" value="GPS DHANKOLI">
-            </div>
-
-            <div class="btn-row">
-                <button class="btn btn-update" onclick="generatePaper()">पेपर अपडेट करें</button>
-                <button class="btn btn-print" onclick="window.print()">🖨️ PDF बनाएं</button>
+                <label>पूर्णांक (Max Marks):</label>
+                <input type="text" id="marks" value="10">
             </div>
         </div>
 
-        <!-- A4 पेज प्रीव्यू -->
-        <div class="preview-wrapper">
+        <div class="input-group">
+            <label>सामान्य निर्देश (Instructions):</label>
+            <input type="text" id="instructions" value="">
+        </div>
+
+        <div class="section-title">3. प्रश्न टाइप करें</div>
+        <label class="checkbox-group">
+            <input type="checkbox" id="autoNumbering" checked>
+            <div>प्रश्नों पर 1, 2, 3 ऑटोमैटिक लगाएं</div>
+        </label>
+        <div class="input-group">
+            <label>प्रश्न (हर लाइन में एक प्रश्न):<br>
+            <small style="color:red; font-weight:normal;">Bilingual के लिए बीच में '|' लगाएं (उदा: प्रश्न | Question)</small></label>
+            <textarea id="questionsText">1.</textarea>
+        </div>
+
+        <div class="section-title">4. लेआउट और डिज़ाइन</div>
+        <label class="checkbox-group" style="background:#e0f7fa; padding:8px; border-radius:4px; border:1px solid #00acc1;">
+            <input type="checkbox" id="autoFit" checked>
+            <div>
+                स्मार्ट ऑटो-फिट (Auto-Fit)
+                <span>अगर प्रश्न ज्यादा होंगे, तो यह उन्हें बॉक्स से बाहर जाने से रोकेगा और साइज़ खुद छोटा कर लेगा।</span>
+            </div>
+        </label>
+
+        <div class="grid-2">
+            <div class="input-group">
+                <label>पेपर लेआउट:</label>
+                <select id="layoutSelect">
+                    <option value="1">1 पेपर (पूरा A4 पेज)</option>
+                    <option value="1-bilingual">1 पेपर (Bilingual: आधा हिंदी | आधा English)</option>
+                    <option value="2-horiz">2 पेपर (ऊपर - नीचे)</option>
+                    <option value="2-vert">2 पेपर (अगल - बगल)</option>
+                    <option value="4" selected>4 पेपर (एक A4 पर 4)</option>
+                    <option value="6">6 पेपर (एक A4 पर 6)</option>
+                    <option value="8">8 पेपर (एक A4 पर 8)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>प्रश्नों का कॉलम (Single lang):</label>
+                <select id="columnStyle">
+                    <option value="1">1 कॉलम (सीधा)</option>
+                    <option value="2">2 कॉलम (अखबार की तरह)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>बेस फॉन्ट साइज़:</label>
+                <select id="fontSize">
+                    <option value="1px">1px (Small)</option>
+                    <option value="3px">3px </option>
+                    <option value="4px">4px </option>
+                    <option value="5px">5px </option>
+                    <option value="6px">6px </option>
+                    <option value="7px">7px </option>
+                    <option value="8px">8px </option>
+                    <option value="9px">9px </option>
+                    <option value="10px">10px</option>
+                    <option value="11px" selected>11px (नॉर्मल)</option>
+                    <option value="12px" selected>12px (Medium)</option>
+                    <option value="13px" selected>13px </option>
+                    <option value="14px" selected>14px </option>
+                    <option value="11px" selected>15px </option>
+                    <option value="16px" selected>16px </option>
+                    <option value="17px" selected>17px </option>
+                    <option value="18px" selected>18px </option>
+                    <option value="19px">19px</option>
+                    <option value="25px">25px </option>
+                    <option value="26px">26px (Big)</option>
+                    <option value="27px">27px </option>
+                    <option value="28px">28px (बड़ा)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>लाइन स्पेसिंग:</label>
+                <select id="lineSpacing">
+                    <option value="0.6">कम (0.6)</option>
+                    <option value="0.8">कम (0.8)</option>
+                    <option value="1">कम (1)</option>
+                    <option value="1.2">कम (1.2)</option>
+                    <option value="1.4">कम (1.4)</option>
+                    <option value="1.6" selected>नॉर्मल (1.6)</option>
+                    <option value="1.8" selected>नॉर्मल (1.8)</option>
+                    <option value="2" selected>नॉर्मल (2)</option>
+                    <option value="2.2">ज्यादा (2.2)</option>
+                </select>
+            </div>
+        </div>
+
+        <label class="checkbox-group">
+            <input type="checkbox" id="showBorder" checked>
+            <div>हर पेपर के चारों तरफ बॉर्डर दिखाएं</div>
+        </label>
+
+        <div class="section-title">5. वाटरमार्क सेटिंग्स</div>
+        <div class="input-group">
+            <label>वाटरमार्क टेक्स्ट:</label>
+            <input type="text" id="watermarkText" value="GURUKUL">
+        </div>
+        <div class="grid-2">
+            <div class="input-group">
+                <label>साइज़:</label>
+                <input type="text" id="watermarkSize" value="30px">
+            </div>
+            <div class="input-group">
+                <label>डार्कनेस (Opacity):</label>
+                <select id="watermarkOpacity">
+                    <option value="0.01">बहुत हल्का</option>
+                    <option value="0.03">हल्का</option>
+                    <option value="0.06" selected>नॉर्मल</option>
+                    <option value="0.09" selected></option>
+                    <option value="0.11">डार्क</option>
+                    <option value="0.15">extra dark</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-update" onclick="generatePaper()">अपडेट करें</button>
+            <button class="btn btn-print" onclick="window.print()">🖨️ प्रिंट / PDF</button>
+        </div>
+    </div>
+
+    <div class="preview-area">
+        <div class="a4-wrapper">
             <div class="a4-page layout-4" id="a4Page">
+                <!-- JS विल इंजर्ट पेपर हियर -->
             </div>
         </div>
     </div>
 
     <script>
+        let logoBase64 = "";
+
+        document.getElementById('logoUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    logoBase64 = event.target.result;
+                    generatePaper(); 
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         function generatePaper() {
             const school = document.getElementById('schoolName').value;
-            const subHeader = document.getElementById('subHeader').value;
-            const watermark = document.getElementById('watermarkText').value;
+            const tagline = document.getElementById('schoolTagline').value;
+            const cls = document.getElementById('className').value;
+            const sub = document.getElementById('subjectName').value;
+            const time = document.getElementById('time').value;
+            const marks = document.getElementById('marks').value;
+            const instructions = document.getElementById('instructions').value;
             const questionsRaw = document.getElementById('questionsText').value;
             
-            // सेटिंग्स
-            const layout = parseInt(document.getElementById('layoutSelect').value);
+            const autoNum = document.getElementById('autoNumbering').checked;
+            const autoFit = document.getElementById('autoFit').checked;
+            
+            const layoutVal = document.getElementById('layoutSelect').value;
             const columnStyle = document.getElementById('columnStyle').value;
             const fontSize = document.getElementById('fontSize').value;
             const lineSpacing = document.getElementById('lineSpacing').value;
+            const showBorder = document.getElementById('showBorder').checked;
+            
+            const wmText = document.getElementById('watermarkText').value;
+            const wmSize = document.getElementById('watermarkSize').value;
+            const wmOpacity = document.getElementById('watermarkOpacity').value;
 
-            // प्रश्नों को HTML में बदलें
+            let boxCount = 1;
+            if (layoutVal === '2-horiz' || layoutVal === '2-vert') boxCount = 2;
+            else if (layoutVal === '4') boxCount = 4;
+            else if (layoutVal === '6') boxCount = 6;
+            else if (layoutVal === '8') boxCount = 8;
+
             const questionsArray = questionsRaw.split('\n');
             let questionsHTML = '';
-            questionsArray.forEach(q => {
-                if(q.trim() !== "") {
-                    questionsHTML += `<div class="question-line">${q}</div>`;
-                }
-            });
+            let qCounter = 1;
 
-            // कॉलम की CSS तय करें
-            let columnCSS = '';
-            if (columnStyle === '1') {
-                columnCSS = 'column-count: 1;';
-            } else if (columnStyle === '2-auto') {
-                columnCSS = 'column-count: 2; column-gap: 15px; column-fill: auto;';
-            } else if (columnStyle === '2-balance') {
-                columnCSS = 'column-count: 2; column-gap: 15px; column-fill: balance;';
+            // 🔥 FIX: Bilingual layout uses modern Grid instead of Tables for strict fitting
+            if (layoutVal === '1-bilingual' || questionsRaw.includes('|')) {
+                questionsArray.forEach(q => {
+                    if(q.trim() !== "") {
+                        const parts = q.split('|');
+                        let leftText = parts[0] ? parts[0].trim() : '';
+                        let rightText = parts[1] ? parts[1].trim() : '';
+                        
+                        if(autoNum) {
+                            leftText = `<b>Q${qCounter}.</b> ` + leftText;
+                            if(rightText) rightText = `<b>Q${qCounter}.</b> ` + rightText;
+                        }
+
+                        questionsHTML += `
+                            <div class="bilingual-row">
+                                <div class="bilingual-col"><div class="question-line">${leftText}</div></div>
+                                <div class="bilingual-col"><div class="question-line">${rightText}</div></div>
+                            </div>`;
+                        qCounter++;
+                    }
+                });
+            } else {
+                questionsArray.forEach(q => {
+                    if(q.trim() !== "") {
+                        let text = q.trim();
+                        if(autoNum) text = `<b>Q${qCounter}.</b> ` + text;
+                        questionsHTML += `<div class="question-line">${text}</div>`;
+                        qCounter++;
+                    }
+                });
             }
 
-            // सिंगल पेपर का कोड
+            let columnCSS = '';
+            if (layoutVal !== '1-bilingual' && !questionsRaw.includes('|') && columnStyle === '2') {
+                columnCSS = 'column-count: 2; column-gap: 15mm; column-fill: auto; height: 100%;';
+            }
+
+            let logoHTML = '';
+            if (logoBase64) {
+                logoHTML = `<img src="${logoBase64}" class="school-logo" style="display:block;">`;
+            }
+
             const singlePaperHTML = `
-                <div class="watermark">${watermark}</div>
-                <div class="school-name">${school}</div>
-                <div class="sub-header">${subHeader}</div>
-                <div class="questions-container" style="position: relative; z-index: 1; ${columnCSS} font-size: ${fontSize}; line-height: ${lineSpacing};">
+                <div class="watermark" style="font-size:${wmSize}; color:rgba(0,0,0,${wmOpacity});">${wmText}</div>
+                <div class="header-section">
+                    ${logoHTML}
+                    <div class="school-info">
+                        <h2 class="school-name">${school}</h2>
+                        ${tagline ? `<p class="school-tagline">${tagline}</p>` : ''}
+                    </div>
+                </div>
+                <div class="meta-details">
+                    <span>Class: ${cls}</span>
+                    <span>Subject: ${sub}</span>
+                    <span>Time: ${time}</span>
+                    <span>MM: ${marks}</span>
+                </div>
+                ${instructions ? `<div class="instructions">${instructions}</div>` : ''}
+                <div class="questions-container" style="${columnCSS} font-size: ${fontSize}; line-height: ${lineSpacing};">
                     ${questionsHTML}
                 </div>
             `;
 
-            // पेज को अपडेट करें
             const page = document.getElementById('a4Page');
-            page.className = 'a4-page layout-' + layout;
+            page.className = 'a4-page layout-' + layoutVal; 
             page.innerHTML = '';
 
-            for (let i = 0; i < layout; i++) {
+            for (let i = 0; i < boxCount; i++) {
                 const box = document.createElement('div');
-                box.className = 'paper-box';
+                box.className = 'paper-box ' + (showBorder ? 'box-bordered' : '');
                 box.innerHTML = singlePaperHTML;
                 page.appendChild(box);
+            }
+
+            // 🔥 SUPER AI AUTO-FIT LOGIC
+            if (autoFit) {
+                setTimeout(() => {
+                    const containers = document.querySelectorAll('.questions-container');
+                    containers.forEach(container => {
+                        let currentSize = parseFloat(window.getComputedStyle(container).fontSize);
+                        // जब तक टेक्स्ट बाहर जा रहा है और साइज़ 6px से बड़ा है, तब तक साइज़ कम करो
+                        while (container.scrollHeight > container.clientHeight && currentSize > 6) {
+                            currentSize -= 0.3; // धीरे-धीरे साइज़ कम करेगा
+                            container.style.fontSize = currentSize + 'px';
+                        }
+                    });
+                }, 50);
             }
         }
 
@@ -252,125 +475,3 @@
     </script>
 </body>
 </html>
-<!-- यहाँ से वर्टिकल और Bilingual (हिंदी-English) दोनों का कोड शुरू -->
-<style>
-    /* 2 पेपर वर्टिकल (Left-Right) लेआउट */
-    .layout-2-vertical { 
-        grid-template-columns: 1fr 1fr; 
-        grid-template-rows: 1fr; 
-        gap: 15mm; 
-    }
-
-    /* Bilingual लेआउट के लिए ग्रिड सिस्टम */
-    .layout-1-bilingual { 
-        grid-template-columns: 1fr; 
-        grid-template-rows: 1fr; 
-    }
-    .bilingual-grid { 
-        display: grid; 
-        grid-template-columns: 1fr 1fr; 
-        column-gap: 20px; 
-        width: 100%; 
-    }
-    .bilingual-row { 
-        display: contents; 
-    }
-    .bilingual-left { 
-        padding-right: 10px; 
-        border-right: 1px dashed #ccc; 
-        break-inside: avoid; 
-    }
-    .bilingual-right { 
-        padding-left: 10px; 
-        break-inside: avoid; 
-    }
-</style>
-
-<script>
-    const layoutDropdown = document.getElementById('layoutSelect');
-
-    // 1. '2 पेपर (Vertical)' ऑप्शन जोड़ें
-    const verticalOption = document.createElement('option');
-    verticalOption.value = '2-vertical';
-    verticalOption.innerHTML = '2 पेपर (Vertical - अगल-बगल)';
-    layoutDropdown.insertBefore(verticalOption, layoutDropdown.options[1]);
-
-    // 2. '1 पेपर (Bilingual)' ऑप्शन जोड़ें
-    const bilingualOption = document.createElement('option');
-    bilingualOption.value = '1-bilingual';
-    bilingualOption.innerHTML = '1 पेपर (Bilingual: हिंदी | English)';
-    layoutDropdown.appendChild(bilingualOption);
-
-    // 3. अपडेटेड मेन फंक्शन (जो वर्टिकल और Bilingual दोनों को संभालेगा)
-    function generatePaper() {
-        const school = document.getElementById('schoolName').value;
-        const subHeader = document.getElementById('subHeader').value;
-        const watermark = document.getElementById('watermarkText').value;
-        const questionsRaw = document.getElementById('questionsText').value;
-        
-        const layoutVal = document.getElementById('layoutSelect').value; 
-        const boxCount = parseInt(layoutVal) || 1;
-        const columnStyle = document.getElementById('columnStyle').value;
-        const fontSize = document.getElementById('fontSize').value;
-        const lineSpacing = document.getElementById('lineSpacing').value;
-
-        let questionsHTML = '';
-
-        // अगर Bilingual चुना गया है
-        if (layoutVal === '1-bilingual') {
-            questionsHTML = '<div class="bilingual-grid">';
-            const questionsArray = questionsRaw.split('\n');
-            questionsArray.forEach(q => {
-                if(q.trim() !== "") {
-                    const parts = q.split('|');
-                    const leftText = parts[0] ? parts[0].trim() : '';
-                    const rightText = parts[1] ? parts[1].trim() : '';
-                    
-                    questionsHTML += `
-                        <div class="bilingual-row">
-                            <div class="question-line bilingual-left">${leftText}</div>
-                            <div class="question-line bilingual-right">${rightText}</div>
-                        </div>`;
-                }
-            });
-            questionsHTML += '</div>';
-        } else {
-            const questionsArray = questionsRaw.split('\n');
-            questionsArray.forEach(q => {
-                if(q.trim() !== "") {
-                    questionsHTML += `<div class="question-line">${q}</div>`;
-                }
-            });
-        }
-
-        let columnCSS = '';
-        if (layoutVal !== '1-bilingual') {
-            if (columnStyle === '1') columnCSS = 'column-count: 1;';
-            else if (columnStyle === '2-auto') columnCSS = 'column-count: 2; column-gap: 15px; column-fill: auto;';
-            else if (columnStyle === '2-balance') columnCSS = 'column-count: 2; column-gap: 15px; column-fill: balance;';
-        }
-
-        const singlePaperHTML = `
-            <div class="watermark">${watermark}</div>
-            <div class="school-name">${school}</div>
-            <div class="sub-header">${subHeader}</div>
-            <div class="questions-container" style="position: relative; z-index: 1; ${columnCSS} font-size: ${fontSize}; line-height: ${lineSpacing};">
-                ${questionsHTML}
-            </div>
-        `;
-
-        const page = document.getElementById('a4Page');
-        page.className = 'a4-page layout-' + layoutVal; 
-        page.innerHTML = '';
-
-        for (let i = 0; i < (layoutVal === '1-bilingual' ? 1 : boxCount); i++) {
-            const box = document.createElement('div');
-            box.className = 'paper-box';
-            box.innerHTML = singlePaperHTML;
-            page.appendChild(box);
-        }
-    }
-
-    generatePaper();
-</script>
-<!-- यहाँ वर्टिकल और Bilingual दोनों का कोड खत्म -->
